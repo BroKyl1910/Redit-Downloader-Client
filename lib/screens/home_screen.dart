@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:reddit_downloader_client/blocs/video_information_bloc.dart';
 import 'package:reddit_downloader_client/helpers/color_palette.dart';
+import 'package:reddit_downloader_client/screens/download_screen.dart';
 import 'package:reddit_downloader_client/widgets/custom_flat_text_field.dart';
 import 'package:reddit_downloader_client/widgets/custom_raised_button.dart';
 
@@ -60,8 +61,16 @@ class HomeScreen extends StatelessWidget {
   }
 
   void getVideoInformation(BuildContext context, String url) {
-    var bloc = Provider.of<VideoInformationBloc>(context, listen: false);
-    bloc.getVideoInformation(url);
+    // var bloc = Provider.of<VideoInformationBloc>(context, listen: false);
+    // bloc.getVideoInformation(url);
+
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => Provider<VideoInformationBloc>(
+                create: (_) => VideoInformationBloc(),
+                dispose: (context, bloc) => bloc.dispose(),
+                child: DownloadScreen(url: url))));
   }
 
   Widget _buildForm(BuildContext context) {
@@ -123,16 +132,15 @@ class HomeScreen extends StatelessWidget {
       child: Center(
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                  color: Color.fromARGB(50, 0, 0, 0),
-                  offset: Offset(2, 2),
-                  spreadRadius: 2,
-                  blurRadius: 2),
-            ],
-            borderRadius: BorderRadius.circular(50)
-          ),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                    color: Color.fromARGB(50, 0, 0, 0),
+                    offset: Offset(2, 2),
+                    spreadRadius: 2,
+                    blurRadius: 2),
+              ],
+              borderRadius: BorderRadius.circular(50)),
           height: 50,
           width: 50,
           child: Padding(
@@ -160,21 +168,7 @@ class HomeScreen extends StatelessWidget {
                 SizedBox(
                   height: 50,
                 ),
-                _buildForm(context),
-                SizedBox(
-                  height: 20,
-                ),
-                StreamBuilder<bool>(
-                    stream: Provider.of<VideoInformationBloc>(context,
-                            listen: false)
-                        .isLoading,
-                    builder: (context, snapshot) {
-                      bool isLoading = snapshot.data ?? false;
-                      if (isLoading) {
-                        return _buildCircularProgressIndicator(context);
-                      }
-                      return Container();
-                    })
+                _buildForm(context)
               ],
             ),
           ],
