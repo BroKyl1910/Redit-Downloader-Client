@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:reddit_downloader_client/blocs/video_download_bloc.dart';
 import 'package:reddit_downloader_client/blocs/video_information_bloc.dart';
 import 'package:reddit_downloader_client/helpers/color_palette.dart';
 import 'package:reddit_downloader_client/screens/download_screen.dart';
@@ -61,16 +62,19 @@ class HomeScreen extends StatelessWidget {
   }
 
   void getVideoInformation(BuildContext context, String url) {
-    // var bloc = Provider.of<VideoInformationBloc>(context, listen: false);
-    // bloc.getVideoInformation(url);
-
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => Provider<VideoInformationBloc>(
-                create: (_) => VideoInformationBloc(),
-                dispose: (context, bloc) => bloc.dispose(),
-                child: DownloadScreen(url: url))));
+      context,
+      MaterialPageRoute(
+        builder: (context) => Provider<VideoInformationBloc>(
+          create: (_) => VideoInformationBloc(),
+          dispose: (context, bloc) => bloc.dispose(),
+          child: Provider<VideoDownloadBloc>(
+              create: (_) => VideoDownloadBloc(),
+              dispose: (context, bloc) => bloc.dispose,
+              child: DownloadScreen(url: url)),
+        ),
+      ),
+    );
   }
 
   Widget _buildForm(BuildContext context) {

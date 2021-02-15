@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:reddit_downloader_client/blocs/video_download_bloc.dart';
 import 'package:reddit_downloader_client/blocs/video_information_bloc.dart';
 import 'package:reddit_downloader_client/json_models/video_information_model.dart';
 import 'package:reddit_downloader_client/widgets/custom_combo_box.dart';
@@ -75,25 +76,28 @@ class _DownloadScreenState extends State<DownloadScreen> {
     bloc.getVideoInformation(url);
   }
 
-  void _handleQualityChange(String value){
-    int res = int.parse(value.substring(0, value.length-1));
+  void _handleQualityChange(String value) {
+    int res = int.parse(value.substring(0, value.length - 1));
     selectedResolution = res;
   }
 
-  void _handleDownloadClick(BuildContext context, VideoInformationModel videoInformationModel){
+  void _handleDownloadClick(
+      BuildContext context, VideoInformationModel videoInformationModel) {
     String baseUrl = videoInformationModel.BaseDownloadUrl;
     int quality = selectedResolution;
 
-    print(baseUrl);
-    print(quality);
+    var bloc = Provider.of<VideoDownloadBloc>(context, listen: false);
+    bloc.downloadVideo(baseUrl, quality);
   }
 
-  Widget _buildQualityCombobox (BuildContext context, List<int> availableResolutions){
+  Widget _buildQualityCombobox(
+      BuildContext context, List<int> availableResolutions) {
     List<String> resStrings = new List<String>();
-    for(int i = availableResolutions.length-1; i >=0; i--){
-      resStrings.add(availableResolutions[i].toString()+"p");
+    for (int i = availableResolutions.length - 1; i >= 0; i--) {
+      resStrings.add(availableResolutions[i].toString() + "p");
     }
-    selectedResolution = int.parse(resStrings[0].substring(0, resStrings[0].length-1));
+    selectedResolution =
+        int.parse(resStrings[0].substring(0, resStrings[0].length - 1));
     return CustomComboBox(values: resStrings, onChange: _handleQualityChange);
   }
 
@@ -167,23 +171,43 @@ class _DownloadScreenState extends State<DownloadScreen> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 10,),
-                                  _buildQualityCombobox(context, videoInformationModel.AvailableResolutions),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  _buildQualityCombobox(
+                                      context,
+                                      videoInformationModel
+                                          .AvailableResolutions),
                                 ],
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(height: 20,),
                         SizedBox(
-                          width: MediaQuery.of(context).size.width - 64,
-                          child: CustomRaisedButton(
-                            text: "Download",
-                            color: Colors.red,
-                            textColor: Colors.white,
-                            onTap: ()=> _handleDownloadClick(context, videoInformationModel),
-                          ),
+                          height: 20,
                         ),
+                        StreamBuilder<bool>(
+                            stream: Provider.of<VideoDownloadBloc>(context,
+                                    listen: false)
+                                .isDownloading,
+                            initialData: false,
+                            builder: (context, snapshot) {
+                              if (snapshot.data == false) {
+                                return SizedBox(
+                                  width: MediaQuery.of(context).size.width - 64,
+                                  child: CustomRaisedButton(
+                                    text: "Download",
+                                    color: Colors.red,
+                                    textColor: Colors.white,
+                                    onTap: () => _handleDownloadClick(
+                                        context, videoInformationModel),
+                                  ),
+                                );
+                              } else {
+                                return _buildCircularProgressIndicator(context,
+                                    MediaQuery.of(context).size.width - 64);
+                              }
+                            }),
                       ],
                     ),
                   )
@@ -196,9 +220,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
     );
   }
 
-  Widget _buildCircularProgressIndicator(BuildContext context) {
+  Widget _buildCircularProgressIndicator(BuildContext context, double width) {
     return Container(
-      width: MediaQuery.of(context).size.width,
+      width: width,
       child: Center(
         child: Container(
           decoration: BoxDecoration(
@@ -248,7 +272,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     if (snapshot.hasData) {
                       return _buildInfoBlock(context, snapshot.data);
                     }
-                    return _buildCircularProgressIndicator(context);
+                    return _buildCircularProgressIndicator(
+                        context, MediaQuery.of(context).size.width);
                   },
                 )
               ],
