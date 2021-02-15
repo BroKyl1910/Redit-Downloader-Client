@@ -2,16 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:reddit_downloader_client/blocs/video_information_bloc.dart';
 import 'package:reddit_downloader_client/helpers/color_palette.dart';
 import 'package:reddit_downloader_client/widgets/custom_flat_text_field.dart';
 import 'package:reddit_downloader_client/widgets/custom_raised_button.dart';
 
-class HomeScreen extends StatefulWidget {
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreen extends StatelessWidget {
   Widget _buildTopBar() {
     return Column(
       children: [
@@ -62,11 +59,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildForm() {
+  void getVideoInformation(BuildContext context, String url) {
+    var bloc = Provider.of<VideoInformationBloc>(context, listen: false);
+    bloc.getVideoInformation(url);
+  }
+
+  Widget _buildForm(BuildContext context) {
+    TextEditingController _urlEditingController = new TextEditingController();
+    _urlEditingController.text =
+        "https://www.reddit.com/r/DunderMifflin/comments/lk1ryk/one_of_the_best_bloopers_ive_ever_seen/";
     return Row(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(16.0),
           child: Container(
             decoration: BoxDecoration(
                 color: Colors.white,
@@ -83,20 +88,24 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   SizedBox(
-                      width: MediaQuery.of(context).size.width - 32,
+                      width: MediaQuery.of(context).size.width - 48,
                       child: CustomFlatTextField(
                         hintText: 'Paste URL from Reddit here...',
+                        textEditingController: _urlEditingController,
                       )),
                   SizedBox(
                     height: 10,
                   ),
                   SizedBox(
-                    width: MediaQuery.of(context).size.width - 32,
+                    width: MediaQuery.of(context).size.width - 48,
                     child: CustomRaisedButton(
                       text: "Download",
                       color: Colors.red,
                       textColor: Colors.white,
-                      onTap: () => {},
+                      onTap: () => {
+                        this.getVideoInformation(
+                            context, _urlEditingController.text)
+                      },
                     ),
                   ),
                 ],
@@ -108,15 +117,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildIndeterminateProgressBar() {
+  Widget _buildCircularProgressIndicator(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
       child: Center(
         child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                  color: Color.fromARGB(50, 0, 0, 0),
+                  offset: Offset(2, 2),
+                  spreadRadius: 2,
+                  blurRadius: 2),
+            ],
+            borderRadius: BorderRadius.circular(50)
+          ),
           height: 50,
           width: 50,
-          child: CircularProgressIndicator(
-              valueColor: new AlwaysStoppedAnimation<Color>(Colors.red)),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CircularProgressIndicator(
+                valueColor: new AlwaysStoppedAnimation<Color>(Colors.red)),
+          ),
         ),
       ),
     );
@@ -137,11 +160,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(
                   height: 50,
                 ),
-                _buildForm(),
+                _buildForm(context),
                 SizedBox(
                   height: 20,
                 ),
-                _buildIndeterminateProgressBar()
+                StreamBuilder<bool>(
+                    stream: Provider.of<VideoInformationBloc>(context,
+                            listen: false)
+                        .isLoading,
+                    builder: (context, snapshot) {
+                      bool isLoading = snapshot.data ?? false;
+                      if (isLoading) {
+                        return _buildCircularProgressIndicator(context);
+                      }
+                      return Container();
+                    })
               ],
             ),
           ],
