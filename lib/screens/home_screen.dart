@@ -79,8 +79,6 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildForm(BuildContext context) {
     TextEditingController _urlEditingController = new TextEditingController();
-    _urlEditingController.text =
-        "https://www.reddit.com/r/DunderMifflin/comments/lk1ryk/one_of_the_best_bloopers_ive_ever_seen/";
     return Row(
       children: [
         Padding(
